@@ -1,0 +1,74 @@
+; DC Motor Control using Keil
+; MCU: 8051
+
+#include <reg51.h>
+
+MOTOR_PIN EQU P1 ; Port 1 for motor control
+
+ORG 0x0000
+
+RESET: MOV SP, #07H ; Set stack pointer
+
+    ; Initialize motor control pin
+    CALL Motor_Init
+
+MAIN:   CALL Motor_Forward ; Rotate motor in forward direction
+
+    ACALL Delay ; Delay for some time
+
+    CALL Motor_Stop ; Stop motor
+
+    ACALL Delay ; Delay for some time
+
+    CALL Motor_Backward ; Rotate motor in backward direction
+
+    ACALL Delay ; Delay for some time
+
+    CALL Motor_Stop ; Stop motor
+
+    SJMP MAIN
+
+; Subroutine to initialize motor control pin
+Motor_Init:
+    MOV MOTOR_PIN, #00H ; Set MOTOR_PIN as output
+
+    RET
+
+; Subroutine to rotate motor in forward direction
+Motor_Forward:
+    MOV MOTOR_PIN, #01H ; Set MOTOR_PIN high to rotate motor forward
+
+    RET
+
+; Subroutine to rotate motor in backward direction
+Motor_Backward:
+    MOV MOTOR_PIN, #02H ; Set MOTOR_PIN high to rotate motor backward
+
+    RET
+
+; Subroutine to stop motor
+Motor_Stop:
+    MOV MOTOR_PIN, #00H ; Set MOTOR_PIN low to stop motor
+
+    RET
+
+; Subroutine for delay
+Delay:
+    MOV R7, #10 ; Outer loop counter
+
+Delay_Loop1:
+    MOV R6, #255 ; Inner loop counter
+
+Delay_Loop2:
+    MOV R5, #255 ; Innermost loop counter
+
+Delay_Loop3:
+    DJNZ R5, Delay_Loop3 ; Decrement innermost loop counter
+
+    DJNZ R6, Delay_Loop2 ; Decrement inner loop counter
+
+    DJNZ R7, Delay_Loop1 ; Decrement outer loop counter
+
+    RET
+
+END
