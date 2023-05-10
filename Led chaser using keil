@@ -1,0 +1,34 @@
+ORG 0x0000
+
+MOV A, #00H    ; Initialize port 1
+MOV P1, A
+
+MAIN:
+    MOV A, #01H     ; Initialize LED pattern
+    MOV P1, A
+    ACALL DELAY     ; Delay for some time
+
+    MOV A, #02H
+    MOV P1, A
+    ACALL DELAY
+
+    MOV A, #04H
+    MOV P1, A
+    ACALL DELAY
+
+    MOV A, #08H
+    MOV P1, A
+    ACALL DELAY
+
+    SJMP MAIN       ; Loop back to MAIN
+
+DELAY:
+    MOV R2, #0FFH
+DELAY_LOOP:
+    MOV R1, #0FFH
+DELAY_LOOP1:
+    DJNZ R1, DELAY_LOOP1
+    DJNZ R2, DELAY_LOOP
+    RET
+
+END
