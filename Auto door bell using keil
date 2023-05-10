@@ -1,0 +1,27 @@
+ORG 0x0000
+
+MOV A, #00H    ; Initialize port 1
+MOV P1, A
+
+MAIN:
+    MOV A, P1     ; Read the state of P1
+    CJNE A, #0FFH, RING_BELL   ; If P1 is not all high, ring the bell
+    SJMP MAIN     ; Loop back to MAIN
+
+RING_BELL:
+    SETB P1.0     ; Set P1.0 high to activate the doorbell
+    ACALL DELAY   ; Delay for some time
+    CLR P1.0      ; Clear P1.0 low to deactivate the doorbell
+    ACALL DELAY   ; Delay for some time
+    RET
+
+DELAY:
+    MOV R2, #0FFH
+DELAY_LOOP:
+    MOV R1, #0FFH
+DELAY_LOOP1:
+    DJNZ R1, DELAY_LOOP1
+    DJNZ R2, DELAY_LOOP
+    RET
+
+END
