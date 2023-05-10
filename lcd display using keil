@@ -1,0 +1,65 @@
+ORG 0x0000
+
+MOV A, #38H    ; 2 lines, 8-bit mode
+CALL SEND_CMD
+
+MOV A, #0CH    ; Display ON, Cursor OFF
+CALL SEND_CMD
+
+MOV A, #06H    ; Increment cursor, no shift
+CALL SEND_CMD
+
+MOV A, #01H    ; Clear display
+CALL SEND_CMD
+
+MOV DPTR, #LCD_TEXT    ; Load address of the text to display
+CALL DISPLAY_TEXT
+
+END
+
+SEND_CMD:
+    MOV P2, A      ; Send command to LCD
+    CLR P1.0       ; RS = 0 (Select Instruction Register)
+    CLR P1.1       ; RW = 0 (Write Mode)
+    SETB P1.2      ; Enable LCD
+    ACALL DELAY_US
+    CLR P1.2       ; Disable LCD
+    ACALL DELAY_MS
+    RET
+
+DISPLAY_TEXT:
+    MOV R0, #00H   ; Initialize index register
+DISPLAY_LOOP:
+    MOV A, @DPTR   ; Load character from memory
+    CJNE A, #00H, DISPLAY_CHAR   ; If not null character, display it
+    RET
+DISPLAY_CHAR:
+    MOV P2, A      ; Send character to LCD
+    SETB P1.0      ; RS = 1 (Select Data Register)
+    CLR P1.1      ; RW = 0 (Write Mode)
+    SETB P1.2     ; Enable LCD
+    ACALL DELAY_US
+    CLR P1.2      ; Disable LCD
+    ACALL DELAY_MS
+    INC DPTR      ; Increment memory pointer
+    SJMP DISPLAY_LOOP
+
+DELAY_US:
+    MOV R2, #05H  ; Adjust this value to modify the delay
+DELAY_LOOP_US:
+    DJNZ R2, DELAY_LOOP_US
+    RET
+
+DELAY_MS:
+    MOV R2, #255
+DELAY_LOOP_MS:
+    MOV R1, #184
+DELAY_LOOP1_MS:
+    DJNZ R1, DELAY_LOOP1_MS
+    DJNZ R2, DELAY_LOOP_MS
+    RET
+
+LCD_TEXT:
+DB "Hello, World!", 0
+
+END
