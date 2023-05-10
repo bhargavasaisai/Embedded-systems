@@ -1,0 +1,111 @@
+; Automatic Door Lock using Keil
+; MCU: 8051
+
+#include <reg51.h>
+
+KEYPAD_PORT EQU P1 ; Port 1 for keypad interface
+DOOR_LOCK_PIN EQU P2.0 ; Door lock control pin
+MOTION_SENSOR_PIN EQU P3.2 ; Motion sensor input pin
+
+ORG 0x0000
+
+RESET: MOV SP, #07H ; Set stack pointer
+
+    ; Initialize keypad and motion sensor pin
+    CALL Keypad_Init
+    CALL MotionSensor_Init
+
+    MOV DOOR_LOCK_PIN, #00H ; Initialize door lock pin as low
+
+MAIN:   ACALL Keypad_Scan ; Scan keypad for input
+
+    CJNE A, #0FFH, KEY_Pressed ; Check if a key is pressed
+
+    JB MOTION_SENSOR_PIN, Door_Unlock ; Check if motion is detected
+
+    SJMP MAIN ; No key or motion detected, continue scanning
+
+KEY_Pressed:    ; Key pressed, A contains the key value
+    ACALL Process_Key ; Process the key
+
+    SJMP MAIN ; Continue scanning for keys
+
+Door_Unlock:
+    SETB DOOR_LOCK_PIN ; Unlock the door
+
+    ACALL Delay ; Delay for some time
+
+    CLR DOOR_LOCK_PIN ; Lock the door
+
+    SJMP MAIN ; Continue scanning
+
+; Subroutine to initialize keypad
+Keypad_Init:
+    MOV KEYPAD_PORT, #0FFH ; Configure KEYPAD_PORT as input
+
+    RET
+
+; Subroutine to initialize motion sensor pin
+MotionSensor_Init:
+    SETB MOTION_SENSOR_PIN ; Configure MOTION_SENSOR_PIN as input with pull-up
+
+    RET
+
+; Subroutine to scan keypad
+Keypad_Scan:
+    MOV A, #0FFH ; Assume no key is pressed
+
+    MOV R2, #0FH ; Number of rows
+    MOV R1, #00H ; Column mask
+    MOV R0, #01H ; Row mask
+
+    Keypad_Loop:
+        MOV P1, R1 ; Apply column mask to KEYPAD_PORT
+
+        CLR P1.4 ; Enable one row at a time
+
+        MOV A, KEYPAD_PORT ; Read KEYPAD_PORT
+
+        JNZ Key_Found ; Key found, A will contain the key value
+
+        RLC R0 ; Rotate row mask left
+        RRC R1 ; Rotate column mask right
+
+        DJNZ R2, Keypad_Loop ; Scan next row
+
+        SJMP Keypad_Scan_Exit ; No key found, exit
+
+    Key_Found:
+        MOV A, R0 ; A contains the key value
+
+    Keypad_Scan_Exit:
+        RET
+
+; Subroutine to process key
+Process_Key:
+    ; Add your code here to handle the keypress
+    ; For example, you can compare the key value with a predefined password
+    ; and take appropriate action, like unlocking the door
+
+    RET
+
+; Subroutine for delay
+Delay:
+    MOV R7, #10 ; Outer loop counter
+
+Delay_Loop1:
+    MOV R6, #255 ; Inner loop counter
+
+Delay_Loop2:
+    MOV R5, #255 ; Innermost loop counter
+
+Delay_Loop3:
+    DJNZ R5, Delay_Loop3 ; Decrement innermost loop counter
+
+    DJNZ R6, Delay_Loop2 ; Decrement inner loop counter
+
+    DJNZ R7, Delay_Loop1 ; Decrement outer loop counter
+
+    RET
+
+END
