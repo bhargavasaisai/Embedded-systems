@@ -1,0 +1,69 @@
+; Keypad Interfacing
+; MCU: 8051
+
+#include <reg51.h>
+
+KEYPAD_PORT EQU P1 ; Port 1 for keypad interface
+
+ORG 0x0000
+
+RESET: MOV SP, #07H ; Set stack pointer
+
+    ; Initialize keypad
+    CALL Keypad_Init
+
+MAIN:   ACALL Keypad_Scan ; Scan keypad
+
+    CJNE A, #0FFH, KEY_Pressed ; Check if a key is pressed
+
+    SJMP MAIN ; No key pressed, continue scanning
+
+KEY_Pressed:    ; Key pressed, A contains the key value
+    ACALL Process_Key ; Process the key
+
+    SJMP MAIN ; Continue scanning for keys
+
+; Subroutine to initialize keypad
+Keypad_Init:
+    MOV KEYPAD_PORT, #0FFH ; Configure KEYPAD_PORT as input
+
+    RET
+
+; Subroutine to scan keypad
+Keypad_Scan:
+    MOV A, #0FFH ; Assume no key is pressed
+
+    MOV R2, #0FH ; Number of rows
+    MOV R1, #00H ; Column mask
+    MOV R0, #01H ; Row mask
+
+    Keypad_Loop:
+        MOV P1, R1 ; Apply column mask to KEYPAD_PORT
+
+        CLR P1.4 ; Enable one row at a time
+
+        MOV A, KEYPAD_PORT ; Read KEYPAD_PORT
+
+        JNZ Key_Found ; Key found, A will contain the key value
+
+        RLC R0 ; Rotate row mask left
+        RRC R1 ; Rotate column mask right
+
+        DJNZ R2, Keypad_Loop ; Scan next row
+
+        SJMP Keypad_Scan_Exit ; No key found, exit
+
+    Key_Found:
+        MOV A, R0 ; A contains the key value
+
+    Keypad_Scan_Exit:
+        RET
+
+; Subroutine to process key
+Process_Key:
+    ; Add your code here to handle the keypress
+    ; For example, you can display the key value or perform specific actions based on the key
+
+    RET
+
+END
