@@ -1,0 +1,86 @@
+; LCD Interfacing using Keil
+; MCU: 8051
+
+#include <reg51.h>
+
+LCD_DATA EQU P2 ; Port 2 for data lines
+LCD_RS EQU P3.0 ; Register select line
+LCD_RW EQU P3.1 ; Read/Write line
+LCD_EN EQU P3.2 ; Enable line
+
+ORG 0x0000
+
+RESET: MOV SP, #07H ; Set stack pointer
+
+    ; Initialize LCD
+    CALL LCD_Init
+
+MAIN:   MOV A, #0F0H ; Data to display
+    CALL LCD_WriteData
+
+    ACALL Delay ; Delay for some time
+
+    SJMP MAIN
+
+; Subroutine to initialize LCD
+LCD_Init:
+    MOV LCD_DATA, #038H ; Function set: 2 lines, 5x7 matrix
+    CALL LCD_Command
+
+    MOV LCD_DATA, #0CH ; Display control: Display on, Cursor off, Blink off
+    CALL LCD_Command
+
+    MOV LCD_DATA, #001H ; Clear display
+    CALL LCD_Command
+
+    MOV LCD_DATA, #006H ; Entry mode set: Increment cursor, No shift
+    CALL LCD_Command
+
+    RET
+
+; Subroutine to send command to LCD
+LCD_Command:
+    CLR LCD_RS ; Set RS to command mode
+    CLR LCD_RW ; Set RW to write mode
+    SETB LCD_EN ; Enable LCD
+
+    ACALL Delay ; Delay for some time
+
+    CLR LCD_EN ; Disable LCD
+
+    RET
+
+; Subroutine to write data to LCD
+LCD_WriteData:
+    SETB LCD_RS ; Set RS to data mode
+    CLR LCD_RW ; Set RW to write mode
+    SETB LCD_EN ; Enable LCD
+
+    MOV A, LCD_DATA ; Get data to display
+
+    ACALL Delay ; Delay for some time
+
+    CLR LCD_EN ; Disable LCD
+
+    RET
+
+; Subroutine for delay
+Delay:
+    MOV R7, #10 ; Outer loop counter
+
+Delay_Loop1:
+    MOV R6, #255 ; Inner loop counter
+
+Delay_Loop2:
+    MOV R5, #255 ; Innermost loop counter
+
+Delay_Loop3:
+    DJNZ R5, Delay_Loop3 ; Decrement innermost loop counter
+
+    DJNZ R6, Delay_Loop2 ; Decrement inner loop counter
+
+    DJNZ R7, Delay_Loop1 ; Decrement outer loop counter
+
+    RET
+
+END
