@@ -1,0 +1,52 @@
+; Digital Clock using Keil
+; MCU: 8051
+
+#include <reg51.h>
+
+DISPLAY_PORT EQU P1 ; Port 1 for 7-segment display
+SEGMENT_SELECT_PORT EQU P2 ; Port 2 for segment select lines
+CLOCK_TICK_MS EQU 10 ; Clock tick duration in milliseconds
+
+ORG 0x0000
+
+RESET: MOV SP, #07H ; Set stack pointer
+
+    ; Initialize display and segment select ports
+    CALL Display_Init
+    CALL Segment_Select_Init
+
+    MOV TMOD, #01H ; Set Timer 0 in 16-bit mode
+    MOV TH0, #0FEH ; Load initial value for Timer 0
+    MOV TL0, #0C2H ; Load initial value for Timer 0
+
+    SETB TR0 ; Start Timer 0
+
+MAIN:   JNB TF0, MAIN ; Wait for Timer 0 overflow
+
+    CLR TF0 ; Clear Timer 0 overflow flag
+
+    CALL Update_Clock ; Update clock display
+
+    SJMP MAIN
+
+; Subroutine to initialize display port
+Display_Init:
+    MOV DISPLAY_PORT, #00H ; Set DISPLAY_PORT as output
+
+    RET
+
+; Subroutine to initialize segment select port
+Segment_Select_Init:
+    MOV SEGMENT_SELECT_PORT, #00H ; Set SEGMENT_SELECT_PORT as output
+
+    RET
+
+; Subroutine to update clock display
+Update_Clock:
+    ; Add your code here to update the clock display
+    ; For example, you can retrieve the current time from a real-time clock (RTC)
+    ; and convert it to 7-segment display codes to be output on the DISPLAY_PORT
+
+    RET
+
+END
